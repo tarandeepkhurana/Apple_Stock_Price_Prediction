@@ -1,9 +1,17 @@
 requirements.in
-data/
-models/
 mlruns/
 stock_env/
+
+# Safe: This avoids pushing large files
+data/*.csv
+models/*.pkl
+
+# Allow tracking of .dvc pointer files and subfolders
+!data/
+!data/raw/
 !data/raw/stock_data.csv.dvc
+
+!models/
 !models/best_model.pkl.dvc
 
 # Byte-compiled / optimized / DLL files
