@@ -4,9 +4,6 @@ import pandas as pd
 import logging
 import os
 import yaml
-from src.data_preprocess import preprocess
-from src.data_fetcher import fetch_data
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 import joblib
@@ -15,13 +12,13 @@ import joblib
 log_dir = 'logs' 
 os.makedirs(log_dir, exist_ok=True)
 
-logger = logging.getLogger('data_fetcher')
+logger = logging.getLogger('hypertuning')
 logger.setLevel("DEBUG")
 
 console_handler = logging.StreamHandler()
 console_handler.setLevel("DEBUG")
 
-file_path = os.path.join(log_dir, 'train.log')
+file_path = os.path.join(log_dir, 'hypertuning.log')
 file_handler = logging.FileHandler(file_path)
 file_handler.setLevel("DEBUG")
 
@@ -33,7 +30,7 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 
-def train_model():
+def tune_model():
     """
     Trains the XGBRegressor model on the preprocessed stock price data
     """
@@ -41,14 +38,10 @@ def train_model():
     with open('params.yaml', 'r') as file:
         params = yaml.safe_load(file)
 
-    df = fetch_data(ticker=params['data_fetcher']['ticker'], start=params['data_fetcher']['start'])
-    df = preprocess(df)
+    X_train = pd.read_csv("data/train/X_train.csv")
+    y_train = pd.read_csv("data/train/y_train.csv")
+    logger.debug("Training data loaded successfully.")
 
-    X = df[["lag_1", "lag_2", "rolling_mean"]]
-    y = df["Close"]
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params['test_size'], random_state=42)
-    
     model = XGBRegressor(random_state=42)
 
     # Define time series cross-validator
@@ -72,7 +65,7 @@ def train_model():
         return_train_score=True
     )
     
-    mlflow.set_experiment('Apple_Stock_Price_Prediction')
+    mlflow.set_experiment('Model_Hyperparameter_Tuning')
 
     with mlflow.start_run() as parent:
         grid_search.fit(X_train, y_train)
@@ -115,13 +108,6 @@ def train_model():
         train_df = mlflow.data.from_pandas(train_df)
         mlflow.log_input(train_df, "training_data")
 
-        # Log test data
-        test_df = X_test.copy()
-        test_df['target'] = y_test
-
-        test_df = mlflow.data.from_pandas(test_df)
-        mlflow.log_input(test_df, "testing_data")
-
         # Log source code
         mlflow.log_artifact(__file__)
         
@@ -129,6 +115,9 @@ def train_model():
         joblib.dump(model, 'models/best_model.pkl')
 
         # Log the best model
-        mlflow.sklearn.log_model(grid_search.best_estimator_, "best_model")
+        mlflow.sklearn.log_model(model, "best_model")
 
-train_model()
+        mlflow.set_tag("Run", "1")
+
+if __name__ == "__main__":
+    tune_model()

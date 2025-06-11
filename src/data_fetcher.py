@@ -24,11 +24,21 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-def fetch_data(ticker: str, start: str) -> pd.DataFrame:
+def fetch_data() -> None:
     """
     It downloads the Apple stock data from yfinance library.
     """
-    df = yf.download(ticker, start=start, end=None)
-    df.to_csv('data/raw/stock_data.csv')
-    logger.debug("Data loaded properly to stock_data.csv")
-    return df
+    try:
+        df = yf.download("AAPL", start="2022-01-01", end=None)
+
+        df.reset_index(inplace=True) 
+
+        df.to_csv('data/raw/stock_data.csv', index=False)  
+        logger.debug("Data loaded properly to stock_data.csv")
+    except Exception as e:
+        logger.error("Error occurred while fetching the data: %s", e)
+        raise
+    
+    
+if __name__ == "__main__":
+    fetch_data()

@@ -25,17 +25,34 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 
-def preprocess(df: pd.DataFrame) -> pd.DataFrame:
+def split_dataset() -> None:
     """
-    Creates new features for the training the model.
+    Splits the dataframe into training and testing datasets.
     """
-    df["lag_1"] = df["Close"].shift(1)  #Closing price one day prior
-    df["lag_2"] = df["Close"].shift(2)  #Closing price two days prior
-    df["rolling_mean"] = df["Close"].rolling(3).mean()  #Average closing price for 3 consecutive days
+    try:
+        file_path = "data/processed/stock_data_new.csv"
+        df = pd.read_csv(file_path)
+        logger.debug("Data loaded successfully from: %s", file_path)
 
-    df.dropna(inplace=True) #Dropping NaN values
+        train_size = int(len(df) * 0.8)
 
-    df.to_csv('data/processed/stock_data_processed.csv')
-    logger.debug("Data preprocessed and loaded to stock_data_processed.csv")
+        X = df[["lag_1", "lag_2", "rolling_mean_3"]]
+        y = df["Close"]
 
-    return df
+        X_train, X_test = X.iloc[:train_size], X.iloc[train_size:]
+        y_train, y_test = y.iloc[:train_size], y.iloc[train_size:]
+        
+        X_train.columns = X_train.columns.str.strip()
+        X_test.columns = X_test.columns.str.strip()
+
+        X_train.to_csv("data/train/X_train.csv", index=False)
+        y_train.to_csv("data/train/y_train.csv", index=False)
+        X_test.to_csv("data/test/X_test.csv", index=False)
+        y_test.to_csv("data/test/y_test.csv", index=False)
+        logger.debug("Data splitted successfully.")
+    except Exception as e:
+        logger.error("Error occurred while splitting the dataset: %s", e)
+        raise
+
+if __name__ == "__main__":
+    split_dataset()
