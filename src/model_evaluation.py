@@ -51,7 +51,7 @@ def evaluate_model():
             mlflow.log_metric('MSE', mse)
             mlflow.log_metric('R2', r2)
 
-            mlflow.set_tag("Run", "5")
+            mlflow.set_tag("Run", "6")
     except Exception as e:
         logger.error("Error occurred while evaluating the model: %s", e)
         raise

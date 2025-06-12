@@ -32,6 +32,7 @@ def new_features() -> None:
         df = pd.read_csv(file_path)
         logger.debug("Data loaded from: %s", file_path)
         
+        df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
         df["Open"] = pd.to_numeric(df["Open"], errors="coerce")
         df["High"] = pd.to_numeric(df["High"], errors="coerce")
         df["Low"] = pd.to_numeric(df["Low"], errors="coerce")
@@ -54,6 +55,8 @@ def new_features() -> None:
         df["is_month_end"] = df["Date"].dt.is_month_end.astype(int)
         df["hl_pct"] = (df["High"] - df["Low"]) / df["Close"]     # High-Low % range
         df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
+        df["volume_change"] = df["Volume"].pct_change().shift(1)
+        df["rolling_vol_mean_5"] = df["Volume"].shift(1).rolling(5).mean()
 
 
         df.dropna(inplace=True) #Dropping NaN values
