@@ -66,21 +66,10 @@ def tune_model():
         return_train_score=True
     )
     
-    mlflow.set_experiment('Model_Tuning')
+    mlflow.set_experiment('Model_Tune')
 
-    with mlflow.start_run() as parent:
+    with mlflow.start_run():
         grid_search.fit(X_train, y_train)
-
-        # log all the child runs
-        for i in range(len(grid_search.cv_results_['params'])):
-
-            with mlflow.start_run(nested=True) as child:
-                mlflow.log_params(grid_search.cv_results_["params"][i])
-                mlflow.log_metrics({
-                    f"cv_mse_{i}": -grid_search.cv_results_['mean_test_mse'][i],
-                    f"cv_mae_{i}": -grid_search.cv_results_['mean_test_mae'][i],
-                    f"cv_r2_{i}": grid_search.cv_results_['mean_test_r2'][i],
-                })
 
         # Get best parameters
         best_params = grid_search.best_params_
@@ -117,8 +106,8 @@ def tune_model():
 
         # Log the best model
         mlflow.sklearn.log_model(model, "best_model")
-        mlflow.log_artifact("artifacts/correlation_heatmap.png")
-        mlflow.set_tag("Run", "1")
+    
+        mlflow.set_tag("Run", "5")
 
 if __name__ == "__main__":
     tune_model()

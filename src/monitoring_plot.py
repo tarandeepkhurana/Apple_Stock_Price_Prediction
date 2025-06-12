@@ -21,7 +21,7 @@ def plot_predictions():
         plt.savefig("monitoring/pred_vs_actual.png")
         # plt.show()
         mlflow.log_artifact("monitoring/pred_vs_actual.png")
-        mlflow.set_tag("Run", "1")
+        mlflow.set_tag("Run", "5")
 
     
 

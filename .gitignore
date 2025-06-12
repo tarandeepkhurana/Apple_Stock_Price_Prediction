@@ -4,6 +4,7 @@ stock_env/
 data/
 models/
 monitoring/
+artifacts/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

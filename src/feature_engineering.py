@@ -31,7 +31,10 @@ def new_features() -> None:
         file_path = "data/raw/stock_data.csv"
         df = pd.read_csv(file_path)
         logger.debug("Data loaded from: %s", file_path)
-
+        
+        df["Open"] = pd.to_numeric(df["Open"], errors="coerce")
+        df["High"] = pd.to_numeric(df["High"], errors="coerce")
+        df["Low"] = pd.to_numeric(df["Low"], errors="coerce")
         df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
 
         df["lag_1"] = df["Close"].shift(1)  #Closing price 1 day prior
@@ -39,11 +42,20 @@ def new_features() -> None:
         df["lag_3"] = df["Close"].shift(3)  #Closing price 3 days prior
         df["lag_4"] = df["Close"].shift(4)  #Closing price 4 days prior
         df["lag_5"] = df["Close"].shift(5)  #Closing price 5 days prior
+        df["return_1"] = df["Close"].pct_change(1).shift(1)     # % change from previous day
+        df["return_3"] = df["Close"].pct_change(3).shift(1)     # % change from 3 days ago
         df["rolling_mean_3"] = df["Close"].shift(1).rolling(window=3).mean()  #Average closing price from previous 3 days
         df["rolling_std_3"] = df["Close"].shift(1).rolling(window=3).std()
         df["rolling_mean_7"] = df["Close"].shift(1).rolling(window=7).mean()
         df["rolling_std_7"] = df["Close"].shift(1).rolling(window=7).std()
-        
+        df["Date"] = pd.to_datetime(df["Date"])
+        df["day_of_week"] = df["Date"].dt.dayofweek           # 0 = Monday, ..., 4 = Friday
+        df["is_month_start"] = df["Date"].dt.is_month_start.astype(int)
+        df["is_month_end"] = df["Date"].dt.is_month_end.astype(int)
+        df["hl_pct"] = (df["High"] - df["Low"]) / df["Close"]     # High-Low % range
+        df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
+
+
         df.dropna(inplace=True) #Dropping NaN values
         
         save_to = 'data/processed/stock_data_new.csv'

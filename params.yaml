@@ -3,14 +3,14 @@ data_fetcher:
     start: "2022-01-01"
 
 param_grid:
-    'n_estimators': [100, 200]             # Controls the number of trees
+    'n_estimators': [200]             # Controls the number of trees
     'learning_rate': [0.01, 0.05]          # Smaller = slower learning, often better
     'max_depth': [3, 5]                      # Controls complexity of trees
     'subsample': [0.6, 0.8]                # Controls row sampling per tree
-    'colsample_bytree': [0.6]         # Controls feature sampling
-    'gamma': [1]                             # Minimum loss reduction to make a split
-    'reg_alpha': [0.1]                  # L1 regularization
-    'reg_lambda': [1]                        # L2 regularization
+    'colsample_bytree': [0.6, 0.8, 1.0]         # Controls feature sampling
+    'gamma': [0, 1]                             # Minimum loss reduction to make a split
+    'reg_alpha': [0, 0.1, 0.5]                  # L1 regularization
+    'reg_lambda': [1, 5]                        # L2 regularization
 
 
 test_size: 0.2
