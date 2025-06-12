@@ -107,7 +107,7 @@ def tune_model():
         # Log the best model
         mlflow.sklearn.log_model(model, "best_model")
     
-        mlflow.set_tag("Run", "6")
+        mlflow.set_tag("Run", "7")
 
 if __name__ == "__main__":
     tune_model()

@@ -57,6 +57,8 @@ def new_features() -> None:
         df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
         df["volume_change"] = df["Volume"].pct_change().shift(1)
         df["rolling_vol_mean_5"] = df["Volume"].shift(1).rolling(5).mean()
+        df["ema_10"] = df["Close"].ewm(span=10).mean().shift(1)
+        df["momentum_3"] = df["Close"] - df["Close"].shift(3)
 
 
         df.dropna(inplace=True) #Dropping NaN values

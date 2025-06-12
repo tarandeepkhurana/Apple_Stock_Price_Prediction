@@ -36,7 +36,7 @@ def feature_correlation():
     df = pd.read_csv(file_path)
     logger.debug("Data loaded successfully from: %s", file_path)
 
-    X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "return_1", "return_3", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7", "day_of_week", "is_month_start", "is_month_end", "hl_pct", "oc_pct", "volume_change", "rolling_vol_mean_5"]]
+    X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "return_1", "return_3", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7", "day_of_week", "is_month_start", "is_month_end", "hl_pct", "oc_pct", "volume_change", "rolling_vol_mean_5", "ema_10", "momentum_3"]]
 
     # Compute correlation matrix
     corr_matrix = X.corr()
@@ -54,7 +54,7 @@ def feature_correlation():
     with mlflow.start_run():
         # Log the image
         mlflow.log_artifact("artifacts/correlation_heatmap.png")
-        mlflow.set_tag("Run", "6")
+        mlflow.set_tag("Run", "7")
         mlflow.log_param("num_features", X.shape[1])
 
 if __name__ == "__main__":
