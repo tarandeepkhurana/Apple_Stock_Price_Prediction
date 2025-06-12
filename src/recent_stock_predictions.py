@@ -38,7 +38,7 @@ def predict_last_15_days():
         model = joblib.load('models/best_model.pkl')
         logger.debug("Model loaded successfully")
 
-        X = df_last_15[["lag_1", "lag_2", "rolling_mean_3"]]
+        X = df_last_15[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7"]]
         y_pred = model.predict(X)
 
         log_file = "monitoring/predictions_log.csv"

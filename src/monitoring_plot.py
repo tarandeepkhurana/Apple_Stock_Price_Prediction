@@ -7,7 +7,7 @@ def plot_predictions():
     df["Date"] = pd.to_datetime(df["Date"])
     df = df.dropna(subset=["Actual"])
     
-    mlflow.set_experiment('Result_Visualization')
+    mlflow.set_experiment('Result_Visualize')
     with mlflow.start_run():
         plt.figure(figsize=(10, 5))
         plt.plot(df["Date"], df["Predicted"], label="Predicted")
@@ -21,6 +21,7 @@ def plot_predictions():
         plt.savefig("monitoring/pred_vs_actual.png")
         # plt.show()
         mlflow.log_artifact("monitoring/pred_vs_actual.png")
+        mlflow.set_tag("Run", "1")
 
     
 

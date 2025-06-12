@@ -36,7 +36,7 @@ def split_dataset() -> None:
 
         train_size = int(len(df) * 0.8)
 
-        X = df[["lag_1", "lag_2", "rolling_mean_3"]]
+        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7"]]
         y = df["Close"]
 
         X_train, X_test = X.iloc[:train_size], X.iloc[train_size:]

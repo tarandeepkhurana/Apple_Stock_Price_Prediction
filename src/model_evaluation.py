@@ -38,7 +38,7 @@ def evaluate_model():
         model = joblib.load('models/best_model.pkl')
         logger.debug("Model loaded successfully.")
         
-        mlflow.set_experiment('Model_Evaluation')
+        mlflow.set_experiment('Model_Evaluate')
 
         with mlflow.start_run():
             y_pred = model.predict(X_test)

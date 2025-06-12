@@ -5,8 +5,10 @@ import logging
 import os
 import yaml
 from sklearn.metrics import make_scorer, mean_squared_error, mean_absolute_error, r2_score
-from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
+from sklearn.model_selection import TimeSeriesSplit, GridSearchCV, RandomizedSearchCV
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #Ensures logs directory exists
 log_dir = 'logs' 
@@ -28,8 +30,7 @@ file_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
-
-
+    
 def tune_model():
     """
     Trains the XGBRegressor model on the preprocessed stock price data
@@ -65,7 +66,7 @@ def tune_model():
         return_train_score=True
     )
     
-    mlflow.set_experiment('Model_Hyperparameter_Tuning')
+    mlflow.set_experiment('Model_Tuning')
 
     with mlflow.start_run() as parent:
         grid_search.fit(X_train, y_train)
@@ -116,7 +117,7 @@ def tune_model():
 
         # Log the best model
         mlflow.sklearn.log_model(model, "best_model")
-
+        mlflow.log_artifact("artifacts/correlation_heatmap.png")
         mlflow.set_tag("Run", "1")
 
 if __name__ == "__main__":

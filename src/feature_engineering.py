@@ -34,10 +34,16 @@ def new_features() -> None:
 
         df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
 
-        df["lag_1"] = df["Close"].shift(1)  #Closing price one day prior
-        df["lag_2"] = df["Close"].shift(2)  #Closing price two days prior
+        df["lag_1"] = df["Close"].shift(1)  #Closing price 1 day prior
+        df["lag_2"] = df["Close"].shift(2)  #Closing price 2 days prior
+        df["lag_3"] = df["Close"].shift(3)  #Closing price 3 days prior
+        df["lag_4"] = df["Close"].shift(4)  #Closing price 4 days prior
+        df["lag_5"] = df["Close"].shift(5)  #Closing price 5 days prior
         df["rolling_mean_3"] = df["Close"].shift(1).rolling(window=3).mean()  #Average closing price from previous 3 days
-
+        df["rolling_std_3"] = df["Close"].shift(1).rolling(window=3).std()
+        df["rolling_mean_7"] = df["Close"].shift(1).rolling(window=7).mean()
+        df["rolling_std_7"] = df["Close"].shift(1).rolling(window=7).std()
+        
         df.dropna(inplace=True) #Dropping NaN values
         
         save_to = 'data/processed/stock_data_new.csv'
