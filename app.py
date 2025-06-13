@@ -1,0 +1,41 @@
+from flask import Flask, jsonify, render_template
+import pandas as pd
+import json
+from src.daily_predict import daily_predict
+from src.recent_stock_predictions import get_prediction_trend
+
+app = Flask(__name__)
+
+@app.route("/")
+def dashboard():
+    df = pd.read_csv("monitoring/predictions_log.csv")
+    df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
+    
+    df["Absolute_Error"] = (df["Predicted"] - df["Actual"]).abs()
+
+    prediction_value, prediction_date, lower_bound, upper_bound = daily_predict()
+    recent_pred = df["Predicted"].tail(5).tolist()
+    trend = get_prediction_trend(recent_pred)
+    
+    df_raw = pd.read_csv("data/raw/stock_data.csv")
+    last_15 = df_raw.tail(15)
+    volume = last_15["Volume"].tolist()
+    closing_prices = last_15["Close"].tolist()
+
+    return render_template("dashboard.html",
+                           labels=df["Date"].tolist(),
+                           predicted=df["Predicted"].tolist(),
+                           actual=df["Actual"].tolist(),
+                           mae=df["MAE"].tolist(),
+                           mse=df["MSE"].tolist(),
+                           prediction_date=prediction_date,
+                           prediction_value=round(prediction_value, 2),
+                           lower_bound=lower_bound,
+                           upper_bound=upper_bound,
+                           trend=trend,
+                           error_table=df.tail(15).to_dict(orient="records"),
+                           volume=volume,
+                           closing_prices=closing_prices)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)

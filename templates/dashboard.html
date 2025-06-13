@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>📊 Apple Stock Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --green: #4caf50;
+            --blue: #42a5f5;
+            --orange: #ffa726;
+            --red: #ef5350;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .prediction-value {
+            font-size: 2rem;
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            background-color: #262626;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 1rem;
+            }
+        }
+
+        .error-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 12px;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+
+        .error-table th,
+        .error-table td {
+            padding: 12px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .error-table th {
+            background-color: #2c2c3c;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>📊 Apple Stock Price Monitoring Dashboard</h1>
+    </header>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>🔮 Predicted Closing Price for {{ prediction_date }}</h2>
+            <p style="font-size: 2em; color: green;">
+                <strong>${{ prediction_value }}</strong>
+                <span style="color: #888;">(95% CI: ${{ lower_bound }} – ${{ upper_bound }})</span>
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Actual vs Predicted (Last 15 Days)</h2>
+
+            <p style="font-size: 1.3em;">
+                Prediction Trend:
+                {% if trend == "up" %}
+                <span style="color: green;">Increasing 📈</span>
+                {% elif trend == "down" %}
+                <span style="color: red;">Decreasing 📉</span>
+                {% else %}
+                <span style="color: gray;">Neutral ➖</span>
+                {% endif %}
+            </p>
+
+            <canvas id="actualPredChart"></canvas>
+        </div>
+
+
+        <div class="card">
+            <h2>📉 MAE Over Time</h2>
+            <canvas id="maeChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>📉 MSE Over Time</h2>
+            <canvas id="mseChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>📋 Prediction vs Actual Error Delta</h2>
+            <table class="error-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Predicted</th>
+                        <th>Actual</th>
+                        <th>Absolute Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in error_table %}
+                    <tr>
+                        <td>{{ row.Date }}</td>
+                        <td>{{ "%.2f"|format(row.Predicted) }}</td>
+                        <td>{{ "%.2f"|format(row.Actual) }}</td>
+                        <td
+                            style="color: {% if row.Absolute_Error > 3 %}var(--red){% else %}var(--text-primary){% endif %};">
+                            {{ "%.2f"|format(row.Absolute_Error) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📊 Volume vs Closing Price (Last 15 Days)</h2>
+            <canvas id="volumePriceChart"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        const labels = {{ labels | tojson | safe }};
+        const predicted = {{ predicted | tojson | safe }};
+        const actual = {{ actual | tojson | safe }};
+        const mae = {{ mae | tojson | safe }};
+        const mse = {{ mse | tojson | safe }};
+        const volume = {{ volume | tojson | safe }};
+        const closing_prices = {{ closing_prices | tojson | safe }};
+
+        new Chart(document.getElementById("actualPredChart"), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Predicted",
+                        data: predicted,
+                        borderColor: "#42a5f5",
+                        backgroundColor: "rgba(66,165,245,0.2)",
+                        fill: true
+                    },
+                    {
+                        label: "Actual",
+                        data: actual,
+                        borderColor: "#4caf50",
+                        backgroundColor: "rgba(76,175,80,0.2)",
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',     // Shows all lines on hover at the same x-point
+                    intersect: false   // Enables easier cursor targeting
+                },
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.dataset.label}: $${context.formattedValue}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        labels: { color: '#f5f5f5' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0a0a0' }
+                    },
+                    y: {
+                        ticks: { color: '#a0a0a0' }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("maeChart"), {
+            type: 'line',
+            data: {
+                labels: labels.slice(-mae.length),
+                datasets: [{
+                    label: "MAE",
+                    data: mae,
+                    borderColor: "#ffa726",
+                    backgroundColor: "rgba(255,167,38,0.2)",
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#f5f5f5' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0a0a0' }
+                    },
+                    y: {
+                        ticks: { color: '#a0a0a0' }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("mseChart"), {
+            type: 'line',
+            data: {
+                labels: labels.slice(-mse.length),
+                datasets: [{
+                    label: "MSE",
+                    data: mse,
+                    borderColor: "#ef5350",
+                    backgroundColor: "rgba(239,83,80,0.2)",
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#f5f5f5' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0a0a0' }
+                    },
+                    y: {
+                        ticks: { color: '#a0a0a0' }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("volumePriceChart"), {
+            type: 'bar',
+            data: {
+                labels: labels.slice(-15),
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Volume',
+                        data: volume.slice(-15),
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        yAxisID: 'y1'
+                    },
+                    {
+                        type: 'line',
+                        label: 'Closing Price',
+                        data: closing_prices.slice(-15),
+                        borderColor: '#42a5f5',
+                        backgroundColor: 'rgba(66,165,245,0.2)',
+                        fill: false,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                stacked: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#f5f5f5' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0a0a0' }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        ticks: { color: '#a0a0a0' },
+                        title: { display: true, text: 'Price ($)', color: '#f5f5f5' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: '#f5b5b5' },
+                        title: { display: true, text: 'Volume', color: '#f5f5f5' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

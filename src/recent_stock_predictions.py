@@ -25,7 +25,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-
 def predict_last_15_days():
     """
     Predicts last 15 days closing stock prices to create the plots.
@@ -61,6 +60,21 @@ def predict_last_15_days():
         logger.error("Error occurred while predicting last 15 days stock prices: %s", e)
         raise
 
+def get_prediction_trend(predictions: list[float]) -> str:
+    """
+    Given a list of recent predictions, determine the trend.
+    Returns: "Upward 📈", "Downward 📉", or "Stable ➖"
+    """
+    diffs = [predictions[i+1] - predictions[i] for i in range(len(predictions) - 1)]
+
+    if all(d > 0 for d in diffs):
+        return "up"
+    elif all(d < 0 for d in diffs):
+        return "down"
+    else:
+        return "neutral"
+
+    
 if __name__ == "__main__":
     predict_last_15_days()
 
