@@ -53,12 +53,13 @@ def new_features() -> None:
         df["day_of_week"] = df["Date"].dt.dayofweek           # 0 = Monday, ..., 4 = Friday
         df["is_month_start"] = df["Date"].dt.is_month_start.astype(int)
         df["is_month_end"] = df["Date"].dt.is_month_end.astype(int)
-        df["hl_pct"] = (df["High"] - df["Low"]) / df["Close"]     # High-Low % range
-        df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
+        # df["hl_pct"] = (df["High"] - df["Low"]) / df["Close"]     # High-Low % range
+        # df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
         df["volume_change"] = df["Volume"].pct_change().shift(1)
         df["rolling_vol_mean_5"] = df["Volume"].shift(1).rolling(5).mean()
         df["ema_10"] = df["Close"].ewm(span=10).mean().shift(1)
         df["momentum_3"] = df["Close"] - df["Close"].shift(3)
+        df["lag_rolling_mean_3"] = df["rolling_mean_3"].shift(1)
 
 
         df.dropna(inplace=True) #Dropping NaN values
