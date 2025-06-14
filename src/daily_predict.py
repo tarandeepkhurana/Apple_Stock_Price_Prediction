@@ -88,8 +88,18 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
         "momentum_3": momentum_3,
         "lag_rolling_mean_3": lag_rolling_mean_3
     }])
+    
+    prediction_date = prediction_date.strftime("%Y-%m-%d")
 
-    return X_pred, prediction_date.strftime("%Y-%m-%d")
+    manual_features_dir = "monitoring/manual_features"
+
+    # Ensure the directory exists
+    os.makedirs(manual_features_dir, exist_ok=True)
+
+    # Save the features with the prediction date in the filename
+    X_pred.to_csv(f"{manual_features_dir}/manual_features_{prediction_date}.csv", index=False)
+    
+    return X_pred, prediction_date
 
 
 def daily_predict() -> tuple[float, str, float, float]:

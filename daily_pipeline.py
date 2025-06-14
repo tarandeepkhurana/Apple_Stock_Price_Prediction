@@ -1,0 +1,34 @@
+import logging
+from src.data_fetcher import fetch_data
+from src.feature_engineering import new_features
+from src.recent_stock_predictions import predict_last_15_days, get_prediction_trend
+from src.daily_predict import daily_predict
+import pandas as pd
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+
+def main():
+    """
+    This function runs the pipeline to update the data and model's prediction.
+    """
+    logging.info("Fetching new stock data...")
+    fetch_data()
+
+    logging.info("Creating the input features...")
+    new_features()
+
+    logging.info("Running predictions for the last 15 days...")
+    predict_last_15_days()
+
+    df = pd.read_csv("monitoring/predictions_log.csv")
+    current_mae = df.loc[0, 'MAE']
+    
+    baseline_mae = 3.2
+    if current_mae > baseline_mae:
+        logging.info(f"MAE deteriorated: {current_mae} | Retrain the model.")
+    else:
+        logging.info("Model is still performing well.")
+
+if __name__ == "__main__":
+    main()

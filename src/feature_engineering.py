@@ -53,8 +53,6 @@ def new_features() -> None:
         df["day_of_week"] = df["Date"].dt.dayofweek           # 0 = Monday, ..., 4 = Friday
         df["is_month_start"] = df["Date"].dt.is_month_start.astype(int)
         df["is_month_end"] = df["Date"].dt.is_month_end.astype(int)
-        # df["hl_pct"] = (df["High"] - df["Low"]) / df["Close"]     # High-Low % range
-        # df["oc_pct"] = (df["Close"] - df["Open"]) / df["Open"]    # Open-Close return
         df["volume_change"] = df["Volume"].pct_change().shift(1)
         df["rolling_vol_mean_5"] = df["Volume"].shift(1).rolling(5).mean()
         df["ema_10"] = df["Close"].ewm(span=10).mean().shift(1)

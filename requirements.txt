@@ -520,7 +520,7 @@ pytz==2025.2
     # via
     #   pandas
     #   yfinance
-pywin32==310
+# pywin32==310
     # via
     #   docker
     #   dvc-task
