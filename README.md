@@ -43,3 +43,15 @@ This project aims to predict the **next day's closing price of Apple Inc. (AAPL)
 | MSE    | 5.85  |
 
 *(These will update dynamically based on the most recent run.)*
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend:** Python (Flask)
+- **Frontend:** HTML, Bootstrap 5, Chart.js
+- **Modeling & Data Processing:** XGBoostRegressor, Pandas, NumPy, Scikit-learn
+- **Visualization:** Matplotlib, Seaborn, Chart.js
+- **Experiment Tracking:** MLflow
+- **Logging:** Python logging module
+
