@@ -30,9 +30,12 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     """
     Generates the next day features for the model.
     """
-    df = pd.read_csv('data/processed/stock_data_new.csv')
+    df = pd.read_csv('data/raw/stock_data.csv')
     last_date = df["Date"].iloc[-1]
     print("Last raw data date:", last_date)
+    
+    df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
+    df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
     
     prediction_date = pd.to_datetime(last_date) + pd.Timedelta(days=1)
 

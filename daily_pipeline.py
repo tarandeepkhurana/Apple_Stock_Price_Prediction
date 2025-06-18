@@ -1,7 +1,7 @@
 import logging
 from src.data_fetcher import fetch_data
 from src.feature_engineering import new_features
-from src.recent_stock_predictions import predict_last_15_days, get_prediction_trend
+from src.recent_stock_predictions import predict_last_15_days, generate_last_15days_manual_features
 from src.daily_predict import daily_predict
 import pandas as pd
 
@@ -15,8 +15,8 @@ def main():
     logging.info("Fetching new stock data...")
     fetch_data()
 
-    logging.info("Creating the input features...")
-    new_features()
+    logging.info("Creating the input features for last 15 days...")
+    generate_last_15days_manual_features()
 
     logging.info("Running predictions for the last 15 days...")
     predict_last_15_days()
