@@ -14,3 +14,16 @@ param_grid:
 
 
 test_size: 0.2
+
+param_grid_lightgbm:
+  num_leaves: [31, 50]
+  learning_rate: [0.01, 0.05, 0.1]
+  n_estimators: [100, 200, 500]
+  max_depth: [-1, 5, 10]
+
+param_grid_randomforest:
+  n_estimators: [100, 200, 500]
+  max_depth: [10, 20, None]
+  min_samples_split: [2, 5, 10]
+  min_samples_leaf: [1, 2, 4]
+  max_features: ['auto', 'sqrt', 'log2']

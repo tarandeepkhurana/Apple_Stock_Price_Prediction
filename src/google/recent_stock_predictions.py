@@ -5,7 +5,7 @@ import os
 import logging
 
 #Ensures logs directory exists
-log_dir = 'logs' 
+log_dir = 'logs/google' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('recent_stock_predictions')
@@ -29,8 +29,8 @@ import pandas as pd
 import os
 
 def generate_last_15days_manual_features(
-    raw_csv_path="data/raw/stock_data.csv",
-    output_csv_path="monitoring/manual_features/manual_last_15days_features.csv"
+    raw_csv_path="data/raw/google/stock_data.csv",
+    output_csv_path="monitoring/manual_features/google/manual_last_15days_features.csv"
 ):
     """
     Manually computes features for the last 15 days using the same logic as get_next_day_features.
@@ -90,16 +90,16 @@ def generate_last_15days_manual_features(
                 "lag_3": lag_3,
                 "lag_4": lag_4,
                 "lag_5": lag_5,
-                "return_1": return_1,
-                "return_3": return_3,
+                # "return_1": return_1,
+                # "return_3": return_3,
                 "rolling_mean_3": rolling_mean_3,
-                "rolling_std_3": rolling_std_3,
+                # "rolling_std_3": rolling_std_3,
                 "rolling_mean_7": rolling_mean_7,
-                "rolling_std_7": rolling_std_7,
-                "day_of_week": day_of_week,
-                "is_month_start": is_month_start,
-                "is_month_end": is_month_end,
-                "volume_change": volume_change,
+                # "rolling_std_7": rolling_std_7,
+                # "day_of_week": day_of_week,
+                # "is_month_start": is_month_start,
+                # "is_month_end": is_month_end,
+                # "volume_change": volume_change,
                 "rolling_vol_mean_5": rolling_vol_mean_5,
                 "ema_10": ema_10,
                 "momentum_3": momentum_3,
@@ -128,15 +128,15 @@ def predict_last_15_days():
     Predicts last 15 days closing stock prices to create the plots.
     """
     try:
-        df = pd.read_csv("monitoring/manual_features/manual_last_15days_features.csv")
+        df = pd.read_csv("monitoring/manual_features/google/manual_last_15days_features.csv")
 
-        model = joblib.load('models/best_model.pkl')
+        model = joblib.load("models/google/randomforest.pkl")
         logger.debug("Model loaded successfully")
 
-        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "return_1", "return_3", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7", "day_of_week", "is_month_start", "is_month_end", "volume_change", "rolling_vol_mean_5", "ema_10", "momentum_3", "lag_rolling_mean_3"]]
+        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "rolling_mean_3", "rolling_mean_7", "rolling_vol_mean_5", "ema_10", "momentum_3", "lag_rolling_mean_3"]] #"return_1", "return_3", , "rolling_std_3""rolling_std_7", , "day_of_week", "is_month_start", "is_month_end", "volume_change"
         y_pred = model.predict(X)
 
-        log_file = "monitoring/predictions_log.csv"
+        log_file = "monitoring/predictions/google/predictions_log.csv"
 
         log_df = pd.DataFrame(columns=["Date", "Predicted", "Actual", "MAE", "MSE"])
 
@@ -156,7 +156,7 @@ def predict_last_15_days():
         logger.error("Error occurred while predicting last 15 days stock prices: %s", e)
         raise
 
-def get_prediction_trend(predictions: list[float]) -> str:
+def get_prediction_trend_google(predictions: list[float]) -> str:
     """
     Given a list of recent predictions, determine the trend.
     Returns: "Upward 📈", "Downward 📉", or "Stable ➖"
@@ -172,6 +172,7 @@ def get_prediction_trend(predictions: list[float]) -> str:
 
     
 if __name__ == "__main__":
-   predict_last_15_days()
+    predict_last_15_days()
+    
 
 

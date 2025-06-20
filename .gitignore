@@ -5,6 +5,7 @@ data/
 models/
 monitoring/
 artifacts/
+microsoft.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

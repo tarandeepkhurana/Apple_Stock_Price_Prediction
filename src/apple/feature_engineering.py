@@ -3,7 +3,7 @@ import logging
 import os
 
 #Ensures logs directory exists
-log_dir = 'logs' 
+log_dir = 'logs/apple' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('feature_engineering')
@@ -28,7 +28,7 @@ def new_features() -> None:
     Creates new features for the training the model.
     """
     try:
-        file_path = "data/raw/stock_data.csv"
+        file_path = "data/raw/apple/stock_data.csv"
         df = pd.read_csv(file_path)
         logger.debug("Data loaded from: %s", file_path)
         
@@ -62,7 +62,7 @@ def new_features() -> None:
 
         df.dropna(inplace=True) #Dropping NaN values
         
-        save_to = 'data/processed/stock_data_new.csv'
+        save_to = 'data/processed/apple/stock_data_new.csv'
         df.to_csv(save_to, index=False)
         logger.debug("Added new features to the data and loaded to: %s", save_to)
     except Exception as e:

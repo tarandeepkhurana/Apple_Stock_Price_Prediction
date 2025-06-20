@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 #Ensures logs directory exists
-log_dir = 'logs' 
+log_dir = 'logs/apple' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('data_fetcher')
@@ -33,7 +33,7 @@ def fetch_data() -> None:
 
         df.reset_index(inplace=True) 
 
-        df.to_csv('data/raw/stock_data.csv', index=False)  
+        df.to_csv('data/raw/apple/stock_data.csv', index=False)  
         logger.debug("Data loaded properly to stock_data.csv")
     except Exception as e:
         logger.error("Error occurred while fetching the data: %s", e)

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>📈 Stock Predictions Home</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --green: #4caf50;
+            --blue: #42a5f5;
+            --orange: #ffa726;
+            --red: #ef5350;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .stock-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stock-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            text-align: center;
+            width: 250px;
+            transition: transform 0.2s;
+        }
+
+        .stock-card:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .stock-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+        }
+
+        .stock-name {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .stock-price {
+            font-size: 1.2rem;
+            color: var(--green);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .stock-logo {
+            width: 80px;
+            /* larger than before */
+            height: 80px;
+            object-fit: contain;
+            /* makes sure image doesn't stretch */
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .apple-logo {
+            width: 75px;
+            height: 75px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>📈 Stock Prediction Dashboard</h1>
+    </header>
+
+    <div class="container">
+        <div class="stock-grid">
+            <!-- Apple -->
+            <a href="/apple">
+                <div class="stock-card">
+                    <img src="{{ url_for('static', filename='apple.png') }}" alt="Apple Logo"
+                        class="stock-logo apple-logo">
+                    <div class="stock-name">Apple (AAPL)</div>
+                </div>
+            </a>
+
+            <!-- Google -->
+            <a href="/google">
+                <div class="stock-card">
+                    <img src="{{ url_for('static', filename='google.png') }}" alt="Google Logo" class="stock-icon">
+                    <div class="stock-name">Google (GOOGL)</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+</body>
+
+</html>

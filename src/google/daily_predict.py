@@ -3,10 +3,9 @@ import os
 import joblib
 import logging
 import numpy as np
-import xgboost as xgb
 
 #Ensures logs directory exists
-log_dir = 'logs' 
+log_dir = 'logs/google' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('daily_predict')
@@ -30,7 +29,7 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     """
     Generates the next day features for the model.
     """
-    df = pd.read_csv('data/raw/stock_data.csv')
+    df = pd.read_csv('data/raw/google/stock_data.csv')
     last_date = df["Date"].iloc[-1]
     print("Last raw data date:", last_date)
     
@@ -76,16 +75,16 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
         "lag_3": lag_3,
         "lag_4": lag_4,
         "lag_5": lag_5,
-        "return_1": return_1,
-        "return_3": return_3,
+        # "return_1": return_1,
+        # "return_3": return_3,
         "rolling_mean_3": rolling_mean_3,
-        "rolling_std_3": rolling_std_3,
+        # "rolling_std_3": rolling_std_3,
         "rolling_mean_7": rolling_mean_7,
-        "rolling_std_7": rolling_std_7,
-        "day_of_week": day_of_week,
-        "is_month_start": is_month_start,
-        "is_month_end": is_month_end,
-        "volume_change": volume_change,
+        # "rolling_std_7": rolling_std_7,
+        # "day_of_week": day_of_week,
+        # "is_month_start": is_month_start,
+        # "is_month_end": is_month_end,
+        # "volume_change": volume_change,
         "rolling_vol_mean_5": rolling_vol_mean_5,
         "ema_10": ema_10,
         "momentum_3": momentum_3,
@@ -93,51 +92,37 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     }])
     
     prediction_date = prediction_date.strftime("%Y-%m-%d")
-
-    manual_features_dir = "monitoring/manual_features"
-
-    # Ensure the directory exists
-    os.makedirs(manual_features_dir, exist_ok=True)
-
-    # Save the features with the prediction date in the filename
-    X_pred.to_csv(f"{manual_features_dir}/manual_features_{prediction_date}.csv", index=False)
     
     return X_pred, prediction_date
 
 
-def daily_predict() -> tuple[float, str, float, float]:
+def daily_predict_google() -> tuple[float, str, float, float]:
     """
     Predicts the next days closing stock price, updates the predictions_log.csv
     """
     try:
         X_pred, prediction_date = get_next_day_features()
+        
+        X_pred_np = X_pred.to_numpy()
 
-        model = joblib.load("models/best_model.pkl")
+        model = joblib.load("models/google/randomforest.pkl")
         logger.debug("Model loaded successfully.")
         
-        X_pred.columns = X_pred.columns.str.strip()
+        # Get predictions from all trees
+        all_tree_preds = np.array([tree.predict(X_pred_np)[0] for tree in model.estimators_])
         
-        booster = model.get_booster()
-        dmatrix = xgb.DMatrix(X_pred)
-
-         # Get raw margin outputs at each boosting round
-        margin_preds = np.array([
-            booster.predict(dmatrix, iteration_range=(0, i), output_margin=True)[0]
-            for i in range(1, model.n_estimators + 1)
-        ])
-
-        prediction = float(model.predict(X_pred)[0])
-
-        # Estimate 95% CI from margin predictions
-        lower = np.percentile(margin_preds, 5)
-        upper = np.percentile(margin_preds, 95)
+        prediction = model.predict(X_pred)[0]
+        
+        # Confidence Interval (95% = 2.5 to 97.5 percentile)
+        lower = np.percentile(all_tree_preds, 2.5)
+        upper = np.percentile(all_tree_preds, 97.5)
         
         print(f"Prediction for {prediction_date} logged: {prediction:.2f}")
 
-        return prediction, prediction_date, round(lower, 2), round(upper, 2)
+        return float(prediction), prediction_date, round(lower, 2), round(upper, 2)
     except Exception as e:
         logger.error("Error occurred while predicting next day's closing price: %s", e)
         raise
- 
+  
 if __name__ == "__main__":
-    daily_predict()
+    daily_predict_google()

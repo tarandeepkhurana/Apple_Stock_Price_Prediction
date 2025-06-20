@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 #Ensures logs directory exists
-log_dir = 'logs' 
+log_dir = 'logs/apple' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('hypertuning')
@@ -39,8 +39,8 @@ def tune_model():
     with open('params.yaml', 'r') as file:
         params = yaml.safe_load(file)
 
-    X_train = pd.read_csv("data/train/X_train.csv")
-    y_train = pd.read_csv("data/train/y_train.csv")
+    X_train = pd.read_csv("data/train/apple/X_train.csv")
+    y_train = pd.read_csv("data/train/apple/y_train.csv")
     logger.debug("Training data loaded successfully.")
 
     model = XGBRegressor(random_state=42)
@@ -74,21 +74,21 @@ def tune_model():
         # Get best parameters
         best_params = grid_search.best_params_
 
-        # Get index of best estimator
-        best_index = grid_search.best_index_
-
-        # Get best scores for each metric
-        best_mse = -grid_search.cv_results_['mean_test_mse'][best_index]  # negate because we set greater_is_better=False
-        best_mae = -grid_search.cv_results_['mean_test_mae'][best_index]
-        best_r2 = grid_search.cv_results_['mean_test_r2'][best_index]
-
         # Log to MLflow
         mlflow.log_params(best_params)
+        
+        model = grid_search.best_estimator_
+        
+        # Predict on training set
+        y_train_pred = model.predict(X_train)
+        true_train_mse = mean_squared_error(y_train, y_train_pred)
+        true_train_mae = mean_absolute_error(y_train, y_train_pred)
+        true_train_r2 = r2_score(y_train, y_train_pred)
 
         mlflow.log_metrics({
-            "best_mse": best_mse,
-            "best_mae": best_mae,
-            "best_r2": best_r2
+            "train_mse": true_train_mse,
+            "train_mae": true_train_mae,
+            "train_r2": true_train_r2
         })
 
         # Log training data
@@ -101,7 +101,6 @@ def tune_model():
         # Log source code
         mlflow.log_artifact(__file__)
         
-        model = grid_search.best_estimator_
         joblib.dump(model, 'models/best_model.pkl')
 
         # Log the best model

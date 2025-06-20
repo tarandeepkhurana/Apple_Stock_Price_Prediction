@@ -1,6 +1,6 @@
 import logging
-from src.apple.data_fetcher import fetch_data
-from src.apple.recent_stock_predictions import predict_last_15_days, generate_last_15days_manual_features
+from src.google.data_fetcher import fetch_data
+from src.google.recent_stock_predictions import predict_last_15_days, generate_last_15days_manual_features
 import pandas as pd
 
 
@@ -19,7 +19,7 @@ def main():
     logging.info("Running predictions for the last 15 days...")
     predict_last_15_days()
 
-    df = pd.read_csv("monitoring/predictions/apple/predictions_log.csv")
+    df = pd.read_csv("monitoring/predictions/google/predictions_log.csv")
     current_mae = df.loc[0, 'MAE']
     
     baseline_mae = 3.2

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 # Ensure the "logs" directory exists
-log_dir = 'logs'
+log_dir = 'logs/google'
 os.makedirs(log_dir, exist_ok=True)
 
 # Setting up logger
@@ -30,13 +30,13 @@ def split_dataset() -> None:
     Splits the dataframe into training and testing datasets.
     """
     try:
-        file_path = "data/processed/stock_data_new.csv"
+        file_path = "data/processed/google/stock_data_new.csv"
         df = pd.read_csv(file_path)
         logger.debug("Data loaded successfully from: %s", file_path)
 
         train_size = int(len(df) * 0.8)
 
-        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "return_1", "return_3", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7", "day_of_week", "is_month_start", "is_month_end", "volume_change", "rolling_vol_mean_5", "ema_10", "momentum_3", "lag_rolling_mean_3"]]
+        X = df.iloc[:, 6:]
         y = df["Close"]
 
         X_train, X_test = X.iloc[:train_size], X.iloc[train_size:]
@@ -45,10 +45,10 @@ def split_dataset() -> None:
         X_train.columns = X_train.columns.str.strip()
         X_test.columns = X_test.columns.str.strip()
 
-        X_train.to_csv("data/train/X_train.csv", index=False)
-        y_train.to_csv("data/train/y_train.csv", index=False)
-        X_test.to_csv("data/test/X_test.csv", index=False)
-        y_test.to_csv("data/test/y_test.csv", index=False)
+        X_train.to_csv("data/train/google/X_train.csv", index=False)
+        y_train.to_csv("data/train/google/y_train.csv", index=False)
+        X_test.to_csv("data/test/google/X_test.csv", index=False)
+        y_test.to_csv("data/test/google/y_test.csv", index=False)
         logger.debug("Data splitted successfully.")
     except Exception as e:
         logger.error("Error occurred while splitting the dataset: %s", e)
