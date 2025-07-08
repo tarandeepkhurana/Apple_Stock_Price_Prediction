@@ -30,12 +30,15 @@ import os
 
 def generate_last_15days_manual_features(
     raw_csv_path="data/raw/google/stock_data.csv",
-    output_csv_path="monitoring/manual_features/google/manual_last_15days_features.csv"
+    output_csv_path="data/last_15_days/last_15_days_features/google/last_15_days_features_google.csv"
 ):
     """
     Manually computes features for the last 15 days using the same logic as get_next_day_features.
     Saves the final DataFrame to a CSV.
     """
+    #Load the scaler
+    scaler = joblib.load('models/google/best_model/scaler_xgb.pkl')
+
     df = pd.read_csv(raw_csv_path)
     df["Date"] = pd.to_datetime(df["Date"])
 
@@ -115,11 +118,24 @@ def generate_last_15days_manual_features(
     # Create DataFrame and save
     features_df = pd.DataFrame(all_features)
 
+    # Split out unscaled and scaled parts
+    date_close_df = features_df.iloc[:, :2]  # First two columns: Date, Close
+    to_scale_df = features_df.iloc[:, 2:]    # Remaining columns to scale
+    
+    # Apply scaler to the numeric part
+    features_scaled = scaler.transform(to_scale_df)
+    
+    # Convert back to DataFrame with correct columns
+    scaled_df = pd.DataFrame(features_scaled, columns=to_scale_df.columns, index=features_df.index)
+
+    # Concatenate back with Date and Close
+    features_df_scaled = pd.concat([date_close_df, scaled_df], axis=1)
+
     # Ensure directory exists
     os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
 
     # Save to CSV
-    features_df.to_csv(output_csv_path, index=False)
+    features_df_scaled.to_csv(output_csv_path, index=False)
     print(f"Saved manual features for last 15 days to: {output_csv_path}")
 
 
@@ -128,15 +144,15 @@ def predict_last_15_days():
     Predicts last 15 days closing stock prices to create the plots.
     """
     try:
-        df = pd.read_csv("monitoring/manual_features/google/manual_last_15days_features.csv")
+        df = pd.read_csv("data/last_15_days/last_15_days_features/google/last_15_days_features_google.csv")
 
-        model = joblib.load("models/google/randomforest.pkl")
+        model = joblib.load("models/google/best_model/xgb_model.pkl")
         logger.debug("Model loaded successfully")
 
-        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "rolling_mean_3", "rolling_mean_7", "rolling_vol_mean_5", "ema_10", "momentum_3", "lag_rolling_mean_3"]] #"return_1", "return_3", , "rolling_std_3""rolling_std_7", , "day_of_week", "is_month_start", "is_month_end", "volume_change"
+        X = df.iloc[:, 2:]
         y_pred = model.predict(X)
 
-        log_file = "monitoring/predictions/google/predictions_log.csv"
+        log_file = "data/last_15_days/last_15_days_predictions/google/predictions_log_google.csv"
 
         log_df = pd.DataFrame(columns=["Date", "Predicted", "Actual", "MAE", "MSE"])
 

@@ -3,6 +3,8 @@ import joblib
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import os
 import logging
+import joblib
+import ta
 
 #Ensures logs directory exists
 log_dir = 'logs/apple' 
@@ -25,23 +27,27 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-import pandas as pd
-import os
-
 def generate_last_15days_manual_features(
     raw_csv_path="data/raw/apple/stock_data.csv",
-    output_csv_path="monitoring/manual_features/apple/manual_last_15days_features.csv"
+    output_csv_path="data/last_15_days/last_15_days_features/apple/last_15_days_features_apple.csv"
 ):
     """
     Manually computes features for the last 15 days using the same logic as get_next_day_features.
     Saves the final DataFrame to a CSV.
     """
+    #Load the scaler
+    scaler = joblib.load('models/apple/best_model/scaler_xgb.pkl')
+
     df = pd.read_csv(raw_csv_path)
     df["Date"] = pd.to_datetime(df["Date"])
 
     # ⬇️ Force numeric type conversion
     df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
     df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
+    
+    df['RSI'] = ta.momentum.RSIIndicator(close=df["Close"]).rsi()
+    macd_indicator = ta.trend.MACD(close=df["Close"])
+    df['MACD'] = macd_indicator.macd()
 
     all_features = []
 
@@ -81,6 +87,9 @@ def generate_last_15days_manual_features(
             ema_10 = close.iloc[:i].ewm(span=10).mean().iloc[-1]
             momentum_3 = close.iloc[i - 1] - close.iloc[i - 4]
             lag_rolling_mean_3 = close.iloc[i - 4:i - 1].mean()
+            
+            rsi = df['RSI'].iloc[i]
+            macd = df['MACD'].iloc[i]
 
             features = {
                 "Date": current_date.strftime("%Y-%m-%d"),  # Add date column for tracking
@@ -88,22 +97,13 @@ def generate_last_15days_manual_features(
                 "lag_1": lag_1,
                 "lag_2": lag_2,
                 "lag_3": lag_3,
-                "lag_4": lag_4,
-                "lag_5": lag_5,
-                "return_1": return_1,
-                "return_3": return_3,
                 "rolling_mean_3": rolling_mean_3,
-                "rolling_std_3": rolling_std_3,
                 "rolling_mean_7": rolling_mean_7,
-                "rolling_std_7": rolling_std_7,
-                "day_of_week": day_of_week,
-                "is_month_start": is_month_start,
-                "is_month_end": is_month_end,
-                "volume_change": volume_change,
-                "rolling_vol_mean_5": rolling_vol_mean_5,
                 "ema_10": ema_10,
                 "momentum_3": momentum_3,
                 "lag_rolling_mean_3": lag_rolling_mean_3,
+                "RSI": rsi,
+                "MACD": macd
             }
 
             all_features.append(features)
@@ -114,12 +114,25 @@ def generate_last_15days_manual_features(
 
     # Create DataFrame and save
     features_df = pd.DataFrame(all_features)
+    
+    # Split out unscaled and scaled parts
+    date_close_df = features_df.iloc[:, :2]  # First two columns: Date, Close
+    to_scale_df = features_df.iloc[:, 2:]    # Remaining columns to scale
+    
+    # Apply scaler to the numeric part
+    features_scaled = scaler.transform(to_scale_df)
+    
+    # Convert back to DataFrame with correct columns
+    scaled_df = pd.DataFrame(features_scaled, columns=to_scale_df.columns, index=features_df.index)
+
+    # Concatenate back with Date and Close
+    features_df_scaled = pd.concat([date_close_df, scaled_df], axis=1)
 
     # Ensure directory exists
     os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
 
     # Save to CSV
-    features_df.to_csv(output_csv_path, index=False)
+    features_df_scaled.to_csv(output_csv_path, index=False)
     print(f"Saved manual features for last 15 days to: {output_csv_path}")
 
 
@@ -128,15 +141,15 @@ def predict_last_15_days():
     Predicts last 15 days closing stock prices to create the plots.
     """
     try:
-        df = pd.read_csv("monitoring/manual_features/apple/manual_last_15days_features.csv")
+        df = pd.read_csv("data/last_15_days/last_15_days_features/apple/last_15_days_features_apple.csv")
 
-        model = joblib.load('models/best_model.pkl')
+        model = joblib.load("models/apple/best_model/xgb_model.pkl")
         logger.debug("Model loaded successfully")
 
-        X = df[["lag_1", "lag_2", "lag_3", "lag_4", "lag_5", "return_1", "return_3", "rolling_mean_3", "rolling_std_3", "rolling_mean_7", "rolling_std_7", "day_of_week", "is_month_start", "is_month_end", "volume_change", "rolling_vol_mean_5", "ema_10", "momentum_3", "lag_rolling_mean_3"]]
+        X = df.iloc[:, 2:]
         y_pred = model.predict(X)
 
-        log_file = "monitoring/predictions/apple/predictions_log.csv"
+        log_file = "data/last_15_days/last_15_days_predictions/apple/predictions_log_apple.csv"
 
         log_df = pd.DataFrame(columns=["Date", "Predicted", "Actual", "MAE", "MSE"])
 

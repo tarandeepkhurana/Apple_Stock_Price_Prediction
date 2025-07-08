@@ -3,6 +3,7 @@ import os
 import joblib
 import logging
 import numpy as np
+import xgboost as xgb
 
 #Ensures logs directory exists
 log_dir = 'logs/google' 
@@ -29,6 +30,9 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     """
     Generates the next day features for the model.
     """
+    #Load scaler
+    scaler = joblib.load('models/google/best_model/scaler_xgb.pkl')
+
     df = pd.read_csv('data/raw/google/stock_data.csv')
     last_date = df["Date"].iloc[-1]
     print("Last raw data date:", last_date)
@@ -91,9 +95,12 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
         "lag_rolling_mean_3": lag_rolling_mean_3
     }])
     
+    X_pred_scaled = scaler.transform(X_pred)
+    X_pred_scaled_df = pd.DataFrame(X_pred_scaled, columns=X_pred.columns)
+    
     prediction_date = prediction_date.strftime("%Y-%m-%d")
     
-    return X_pred, prediction_date
+    return X_pred_scaled_df, prediction_date
 
 
 def daily_predict_google() -> tuple[float, str, float, float]:
@@ -102,20 +109,24 @@ def daily_predict_google() -> tuple[float, str, float, float]:
     """
     try:
         X_pred, prediction_date = get_next_day_features()
-        
-        X_pred_np = X_pred.to_numpy()
 
-        model = joblib.load("models/google/randomforest.pkl")
+        model = joblib.load("models/google/best_model/xgb_model.pkl")
         logger.debug("Model loaded successfully.")
         
-        # Get predictions from all trees
-        all_tree_preds = np.array([tree.predict(X_pred_np)[0] for tree in model.estimators_])
-        
-        prediction = model.predict(X_pred)[0]
-        
-        # Confidence Interval (95% = 2.5 to 97.5 percentile)
-        lower = np.percentile(all_tree_preds, 2.5)
-        upper = np.percentile(all_tree_preds, 97.5)
+        booster = model.get_booster()
+        dmatrix = xgb.DMatrix(X_pred)
+
+         # Get raw margin outputs at each boosting round
+        margin_preds = np.array([
+            booster.predict(dmatrix, iteration_range=(0, i), output_margin=True)[0]
+            for i in range(1, model.n_estimators + 1)
+        ])
+
+        prediction = float(model.predict(X_pred)[0])
+
+        # Estimate 95% CI from margin predictions
+        lower = np.percentile(margin_preds, 5)
+        upper = np.percentile(margin_preds, 95)
         
         print(f"Prediction for {prediction_date} logged: {prediction:.2f}")
 

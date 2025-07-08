@@ -19,7 +19,7 @@ def main():
     logging.info("Running predictions for the last 15 days...")
     predict_last_15_days()
 
-    df = pd.read_csv("monitoring/predictions/google/predictions_log.csv")
+    df = pd.read_csv("data/last_15_days/last_15_days_predictions/google/predictions_log_google.csv")
     current_mae = df.loc[0, 'MAE']
     
     baseline_mae = 3.2

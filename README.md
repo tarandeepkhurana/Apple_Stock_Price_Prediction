@@ -18,24 +18,18 @@ This project aims to predict the **next day's closing prices of Apple (AAPL) and
 ### Apple Stocks
 - **Algorithm Used:** XGBoostRegressor
 - **Features Used:**
-  - `lag_1` to `lag_5`: Closing prices from the previous 1 to 5 days
-  - `return_1`: % change in closing price from the previous day
-  - `return_3`: % change in closing price from 3 days ago
+  - `lag_1` to `lag_3`: Closing prices from the previous 1 to 3 days
   - `rolling_mean_3`: 3-day rolling average of the closing price (excluding today)
-  - `rolling_std_3`: 3-day rolling standard deviation (volatility)
   - `rolling_mean_7`: 7-day rolling mean
-  - `rolling_std_7`: 7-day rolling std deviation
-  - `volume_change`: % change in volume from previous day
-  - `rolling_vol_mean_5`: 5-day rolling average of trading volume
   - `ema_10`: 10-day exponential moving average of closing price
   - `momentum_3`: Difference between today's close and close 3 days ago
   - `lag_rolling_mean_3`: Lagged version of the 3-day rolling mean
-  - `day_of_week`: Integer (0 = Monday, ..., 4 = Friday)
-  - `is_month_start`: 1 if it's the first day of the month, else 0
-  - `is_month_end`: 1 if it's the last day of the month, else 0
+  - `RSI`: 14-day relative strength index measuring recent price momentum
+  - `MACD`: Difference between 12-day and 26-day exponential moving averages
+
 
 ### Google Stocks
-- **Algorithm Used:** RandomForestRegressor
+- **Algorithm Used:** XGBoostRegressor
 - **Features Used:**
   - `lag_1` to `lag_5`: Closing prices from the previous 1 to 5 days
   - `rolling_mean_3`: 3-day rolling average of the closing price (excluding today)
@@ -52,8 +46,8 @@ This project aims to predict the **next day's closing prices of Apple (AAPL) and
 ### Apple Stocks
 | Metric | Value |
 |--------|-------|
-| MAE    | 2.15  |
-| MSE    | 5.85  |
+| MAE    | 2.28  |
+| MSE    | 7.13  |
 
 ### Google Stocks
 | Metric | Value |

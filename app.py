@@ -14,7 +14,7 @@ def home():
 
 @app.route("/apple")
 def apple_dashboard():
-    df = pd.read_csv("monitoring/predictions/apple/predictions_log.csv")
+    df = pd.read_csv("data/last_15_days/last_15_days_predictions/apple/predictions_log_apple.csv")
     df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
     
     df["Absolute_Error"] = (df["Predicted"] - df["Actual"]).abs()
@@ -45,7 +45,7 @@ def apple_dashboard():
 
 @app.route("/google")
 def google_dashboard():
-    df = pd.read_csv("monitoring/predictions/google/predictions_log.csv")
+    df = pd.read_csv("data/last_15_days/last_15_days_predictions/google/predictions_log_google.csv")
     df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
     
     df["Absolute_Error"] = (df["Predicted"] - df["Actual"]).abs()

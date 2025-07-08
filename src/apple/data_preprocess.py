@@ -1,6 +1,9 @@
 import logging
 import os
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+import joblib
 
 # Ensure the "logs" directory exists
 log_dir = 'logs/apple'
@@ -25,12 +28,12 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 
-def split_dataset() -> None:
+def split_dataset(model: str) -> None:
     """
     Splits the dataframe into training and testing datasets.
     """
     try:
-        file_path = "data/processed/apple/stock_data_new.csv"
+        file_path = f"data/feature_engineered/apple/{model}/stock_data_new.csv"
         df = pd.read_csv(file_path)
         logger.debug("Data loaded successfully from: %s", file_path)
 
@@ -45,14 +48,29 @@ def split_dataset() -> None:
         X_train.columns = X_train.columns.str.strip()
         X_test.columns = X_test.columns.str.strip()
 
-        X_train.to_csv("data/train/apple/X_train.csv", index=False)
-        y_train.to_csv("data/train/apple/y_train.csv", index=False)
-        X_test.to_csv("data/test/apple/X_test.csv", index=False)
-        y_test.to_csv("data/test/apple/y_test.csv", index=False)
+        scaler = StandardScaler()
+
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Convert back to DataFrames
+        X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index)
+        X_test_scaled_df = pd.DataFrame(X_test_scaled, columns=X_test.columns, index=X_test.index)
+
+        X_train_scaled_df.to_csv(f"data/train/apple/{model}/X_train.csv", index=False)
+        y_train.to_csv(f"data/train/apple/{model}/y_train.csv", index=False)
+        X_test_scaled_df.to_csv(f"data/test/apple/{model}/X_test.csv", index=False)
+        y_test.to_csv(f"data/test/apple/{model}/y_test.csv", index=False)
         logger.debug("Data splitted successfully.")
+
+        joblib.dump(scaler, f'models/apple/scaler_{model}.pkl')
+        logger.debug("Scaler saved")
+
     except Exception as e:
         logger.error("Error occurred while splitting the dataset: %s", e)
         raise
 
 if __name__ == "__main__":
-    split_dataset()
+    split_dataset('xgb')
+    split_dataset('rf')
+    split_dataset('lgbm')

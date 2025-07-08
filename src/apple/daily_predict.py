@@ -4,6 +4,7 @@ import joblib
 import logging
 import numpy as np
 import xgboost as xgb
+import ta
 
 #Ensures logs directory exists
 log_dir = 'logs/apple' 
@@ -30,6 +31,9 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     """
     Generates the next day features for the model.
     """
+    #Load scaler
+    scaler = joblib.load('models/apple/best_model/scaler_xgb.pkl')
+
     df = pd.read_csv('data/raw/apple/stock_data.csv')
     last_date = df["Date"].iloc[-1]
     print("Last raw data date:", last_date)
@@ -37,6 +41,10 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
     df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
     
+    df['RSI'] = ta.momentum.RSIIndicator(close=df["Close"]).rsi()
+    macd_indicator = ta.trend.MACD(close=df["Close"])
+    df['MACD'] = macd_indicator.macd()
+
     prediction_date = pd.to_datetime(last_date) + pd.Timedelta(days=1)
 
     # Get recent values
@@ -69,32 +77,29 @@ def get_next_day_features() -> tuple[pd.DataFrame, pd.Timestamp]:
     momentum_3 = close.iloc[-1] - close.iloc[-4]
     
     lag_rolling_mean_3 = close.iloc[-4:-1].mean()
+    
+    rsi = df["RSI"].iloc[-1]
+    macd = df["MACD"].iloc[-1]
 
     X_pred = pd.DataFrame([{
         "lag_1": lag_1,
         "lag_2": lag_2,
         "lag_3": lag_3,
-        "lag_4": lag_4,
-        "lag_5": lag_5,
-        "return_1": return_1,
-        "return_3": return_3,
         "rolling_mean_3": rolling_mean_3,
-        "rolling_std_3": rolling_std_3,
         "rolling_mean_7": rolling_mean_7,
-        "rolling_std_7": rolling_std_7,
-        "day_of_week": day_of_week,
-        "is_month_start": is_month_start,
-        "is_month_end": is_month_end,
-        "volume_change": volume_change,
-        "rolling_vol_mean_5": rolling_vol_mean_5,
         "ema_10": ema_10,
         "momentum_3": momentum_3,
-        "lag_rolling_mean_3": lag_rolling_mean_3
+        "lag_rolling_mean_3": lag_rolling_mean_3,
+        "RSI": rsi,
+        "MACD": macd
     }])
     
+    X_pred_scaled = scaler.transform(X_pred)
+    X_pred_scaled_df = pd.DataFrame(X_pred_scaled, columns=X_pred.columns)
+
     prediction_date = prediction_date.strftime("%Y-%m-%d")
     
-    return X_pred, prediction_date
+    return X_pred_scaled_df, prediction_date
 
 
 def daily_predict() -> tuple[float, str, float, float]:
@@ -104,7 +109,7 @@ def daily_predict() -> tuple[float, str, float, float]:
     try:
         X_pred, prediction_date = get_next_day_features()
 
-        model = joblib.load("models/best_model.pkl")
+        model = joblib.load("models/apple/best_model/xgb_model.pkl")
         logger.debug("Model loaded successfully.")
         
         X_pred.columns = X_pred.columns.str.strip()

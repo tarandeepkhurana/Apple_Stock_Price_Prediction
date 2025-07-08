@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 #Ensures logs directory exists
-log_dir = 'logs/apple' 
+log_dir = 'logs/google' 
 os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger('eda')
@@ -30,7 +30,7 @@ def feature_correlation(model: str):
     """
     Plots a heatmap showing feature correlation.
     """
-    file_path = f"data/feature_engineered/apple/{model}/stock_data_new.csv"
+    file_path = f"data/feature_engineered/google/{model}/stock_data_new.csv"
     df = pd.read_csv(file_path)
     logger.debug("Data loaded successfully from: %s", file_path)
 
@@ -46,7 +46,8 @@ def feature_correlation(model: str):
     plt.tight_layout()
     plt.savefig("artifacts/correlation_heatmap.png")  # Save locally for MLflow logging
     logger.debug("Heatmap saved.")
-
+    
+    mlflow.set_tracking_uri("http://localhost:5001")
     mlflow.set_experiment(f'EDA_{model}')
 
     with mlflow.start_run():

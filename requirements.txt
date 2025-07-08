@@ -753,5 +753,6 @@ zipp==3.22.0
     # via importlib-metadata
 xgboost==3.0.2
 lightgbm==4.6.0
+ta
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
