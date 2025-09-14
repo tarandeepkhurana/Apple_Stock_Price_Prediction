@@ -19,4 +19,4 @@ RUN pip install -r requirements.txt
 EXPOSE 5002
 
 # Run the Flask app
-CMD ["python", "app.py"]
+CMD ["sh", "-c", "python daily_pipeline_google.py && python daily_pipeline.py && python app.py"]
